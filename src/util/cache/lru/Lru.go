@@ -22,7 +22,8 @@ type Cache struct {
 	OnEvicted func(key string, value Value) // 某条记录被移除时的回调函数，可以为 nil
 }
 
-// 键值对 entry 是双向链表节点的数据类型，在链表中仍保存每个值对应的 key 的好处在于，淘汰队首节点时，需要用 key 从字典中删除对应的映射
+// 键值对 entry 是双向链表节点的数据类型，在链表中仍保存每个值对应的 key 的好处在于，淘汰队首节点时，
+// 需要用 key 从字典中删除对应的映射
 type entry struct {
 	key   string
 	value Value
@@ -50,19 +51,19 @@ func New(maxBytes int64, onEvicted func(string, Value)) *Cache {
 func (c *Cache) Get(key string) (value Value, ok bool) {
 	if ele, ok := c.cache[key]; ok {
 		// 将元素移动到队列尾部
-		// c.ll.MoveToFront(ele)，即将链表中的节点 ele 移动到队尾（双向链表作为队列，队首队尾是相对的，在这里约定 front 为队尾
-		c.ll.MoveToFront(ele)
-		kv := ele.Value.(*entry)
+		// c.ll.MoveToFront(ele)，即将链表中的节点 ele 移动到队尾（双向链表作为队列，队首队尾是相对的
+		c.ll.MoveToFront(ele)    //头插入法，插入到链表头部位置
+		kv := ele.Value.(*entry) // go泛型
 		return kv.value, true
 	}
 	return
 }
 
-// 执行删除操作  淘汰在队列里最近最少访问的元素 ---》 也就是队列首部的元素
+// 执行删除操作  淘汰在队列里最近最少访问的元素 ---》 也就是队列尾部的元素
 // RemoveOldest removes the oldest item
 func (c *Cache) RemoveOldest() {
 	// 定位到队列的首部
-	ele := c.ll.Back() // 取到队首节点，从链表中删除
+	ele := c.ll.Back() // 取到队尾节点，从链表中删除
 	if ele != nil {
 		c.ll.Remove(ele)
 		// 类型强转
@@ -77,19 +78,19 @@ func (c *Cache) RemoveOldest() {
 	}
 }
 
-// 增加元素移动到队列队列尾部
+// 增加元素移动到队列队头尾部
 // Add adds a value to the cache.
 func (c *Cache) Add(key string, value Value) {
 	// 先检测要添加的元素是否在缓存中
 	if ele, ok := c.cache[key]; ok {
-		// 如果在缓存中，则将其移动到队列尾部，并进行缓存更新操作 【【【值覆盖操作】】】
+		// 如果在缓存中，则将其移动到队列头部，并进行缓存更新操作 【【【值覆盖操作】】】
 		c.ll.MoveToFront(ele)
 		kv := ele.Value.(*entry)
 		c.nbytes += int64(value.Len()) - int64(kv.value.Len())
 		kv.value = value
 		return
 	}
-	// 如果不在缓存中，则进行添加操作，并将元素移动到队列尾部
+	// 如果不在缓存中，则进行添加操作，并将元素移动到队列头部
 	ele := c.ll.PushFront(&entry{key, value})
 	c.cache[key] = ele
 	// 更新使用的内存情况

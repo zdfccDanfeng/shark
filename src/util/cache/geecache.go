@@ -20,7 +20,7 @@ type Getter interface {
 
 // 定义一个函数类型 F，并且实现接口 A 的方法，然后在这个方法中调用自己。这是 Go 语言中将其他函数（参数返回值定义与 F 一致）转换为接口 A 的常用技巧
 // A GetterFunc implements Getter with a function.
-type GetterFunc func(key string) ([]byte, error)
+type GetterFunc func(key string) ([]byte, error) // 函数类型实现了Getter接口：  Getter的子类
 
 // Get implements Getter interface function
 func (f GetterFunc) Get(key string) ([]byte, error) {
@@ -35,9 +35,9 @@ func (f GetterFunc) Get(key string) ([]byte, error) {
 //构建函数 NewGroup 用来实例化 Group，并且将 group 存储在全局变量 groups 中。
 //GetGroup 用来特定名称的 Group，这里使用了只读锁 RLock()，因为不涉及任何冲突变量的写操作。
 type Group struct {
-	name      string
-	getter    Getter
-	mainCache cache
+	name      string // 命名空间
+	getter    Getter // 数据加载器
+	mainCache cache  // 并发缓存结构
 }
 
 var (
@@ -110,6 +110,10 @@ func (g *Group) populateCache(key string, value ByteView) {
 	g.mainCache.add(key, value)
 }
 
+// 在这个测试用例中，我们借助 GetterFunc 的类型转换，将一个匿名回调函数转换成了接口 f Getter
+// 调用该接口的方法 f.Get(key string)，实际上就是在调用匿名回调函数。
+// 定义一个函数类型 F，并且实现接口 A 的方法，然后在这个方法中调用自己。
+// 这是 Go 语言中将其他函数（参数返回值定义与 F 一致）转换为接口 A 的常用技巧。
 func TestGetter(t *testing.T) {
 	var f Getter = GetterFunc(func(key string) ([]byte, error) {
 		return []byte(key), nil

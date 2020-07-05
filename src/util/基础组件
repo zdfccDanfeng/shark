@@ -1,0 +1,8 @@
+1. https://github.com/syndtr/goleveldb go语言实现的levelDb
+2. https://github.com/golang/groupcache go语言实现的精简版本的cache
+3. https://github.com/emirpasic/gods go实现的常用数据结构
+4. https://github.com/hashicorp/golang-lru go实现的lru
+5. https://github.com/dengsgo/math-engine go实现的表达式引擎计算工具
+6. https://github.com/orcaman/concurrent-map 线程安全map
+7. https://github.com/eranyanay/1m-go-websockets/blob/master/0_simple_web_server/server.go 可处理100万web_socket
+

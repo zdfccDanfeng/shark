@@ -174,7 +174,7 @@ func (p *WorkPool) loop(maxWorkersCount int) {
 	}
 }
 
-// template 使用WorkerPool的例子
+// templates 使用WorkerPool的例子
 func TestWorkerPoolStart(t *testing.T) {
 	wp := New(10) // Set the maximum number of threads
 	wp.SetTimeout(time.Millisecond)

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"container/list"
+	"fmt"
 	"github.com/emirpasic/gods/sets/hashset"
-	"github.com/scaffold/src/config"
-	"github.com/scaffold/src/dao"
-	"github.com/scaffold/src/util"
-	"github.com/scaffold/src/util/algorithm/dfs"
+	"github.com/shark/src/config"
+	"github.com/shark/src/dao"
+	"github.com/shark/src/util"
+	"github.com/shark/src/util/algorithm/dfs"
 	"sort"
 	"strconv"
 	"strings"
@@ -161,6 +163,18 @@ type AdDspTarget struct {
 	region   string
 }
 
+func TestDuopleList() {
+	doubleList := list.New()
+	doubleList.PushFront(10) // 头插法
+	doubleList.PushFront(20)
+	doubleList.PushFront(45)
+	doubleList.PushFront(67)
+	font := doubleList.Front()
+	fmt.Println("font is :", font)
+	back := doubleList.Back()
+	doubleList.MoveToFront(back)
+}
+
 func main() {
 	//
 	//nums := []int{0, 12, 1, 0, 4}
@@ -202,4 +216,5 @@ func main() {
 	//
 	//tree.TestBinaryTreePaths(&node1)
 	dfs.TestLongestLenght(")(")
+	TestDuopleList()
 }

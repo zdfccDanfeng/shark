@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/scaffold/src/util/cache/lru"
+	"github.com/shark/src/util/cache/lru"
 	"sync"
 )
 
@@ -16,6 +16,7 @@ type cache struct {
 func (c *cache) add(key string, value ByteView) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	// 惰性操作
 	if c.lru == nil {
 		c.lru = lru.New(c.cacheBytes, nil)
 	}
