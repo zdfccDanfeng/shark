@@ -8,11 +8,11 @@ import (
 	"github.com/shark/src/config"
 	"github.com/shark/src/dao"
 	"github.com/shark/src/util"
-	"github.com/shark/src/util/algorithm/dfs"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 func largestPerimeter(A []int) int {
@@ -45,7 +45,7 @@ func canJump(nums []int) bool {
 
 	length := len(nums)
 
-	for index, _ := range nums {
+	for index := range nums {
 		if index > reach || reach >= length-1 {
 			// index > reach的意义：表征前面的累积reach 努力无法抵达当前的位置，因此直接退出这种选择
 			break
@@ -204,6 +204,161 @@ func TestContext() {
 	wg.Wait()
 }
 
+// 100 人抢10个鸡蛋 ,利用channel原理实现资源争抢
+func GetEggs() {
+	var wg sync.WaitGroup
+	eggs := make(chan int, 10)
+	for i := 0; i < 10; i++ {
+		eggs <- i
+	}
+	for i := 0; i < 100; i++ {
+		go func(num int) {
+			wg.Add(1)
+			select {
+			case egg := <-eggs:
+				{
+					fmt.Printf("people %d get egg %d \n", num, egg)
+				}
+			default:
+			}
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+}
+
+var (
+	infos = make(chan int, 10)
+	// 声明全局变量，节省内存交互时间
+	wg     sync.WaitGroup
+	global sync.WaitGroup
+	ch     = make(chan []int, 1)
+)
+
+// A 车，清洗材料
+func funcA(elemetns []int) {
+	var tasks = make([][]int, 3)
+	// 3个工人
+	for i := 0; i < 3; i++ {
+		// 用来分配任务
+		task := []int{}
+		// 获取任务分割
+		for _, value := range elemetns {
+			task = append(task, value/3.0)
+		}
+		wg.Add(1)
+		go func(task []int) {
+			tasks[i] = clean(task)
+			wg.Done()
+		}(task)
+		wg.Wait()
+
+		// 合并回elements
+		for index, _ := range tasks {
+			// 清空原来的elements
+			elemetns[index] = 0
+			for _, task := range tasks {
+				elemetns[index] += task[index]
+			}
+		}
+		ch <- elemetns
+		global.Done()
+	}
+}
+
+func MainPipline() {
+	elemetns := []int{1, 1, 1}
+	global.Add(1)
+	go funcA(elemetns)
+	global.Add(1)
+	go funcB()
+	global.Add(1)
+	go funcC()
+	global.Wait()
+}
+
+// 清洗材料
+func clean(task []int) []int {
+	fmt.Printf("clean task %v\n", task)
+	return task
+}
+
+// B车， 加工材料
+func funcB() {
+	elements := []int{}
+	for {
+		select {
+		case elements = <-ch:
+			// 阻塞直到接收到材料
+			break
+		default:
+			continue
+		}
+	}
+	for index, element := range elements {
+		wg.Add(1)
+		go func(element, index int) {
+			// 加工材料
+			elements[index] = cure(element)
+			wg.Done()
+		}(element, index)
+	}
+	wg.Wait()
+	global.Done()
+}
+
+func cure(element int) int {
+	fmt.Printf("cue ele %d\n", element)
+	return element
+}
+
+// C车，运输材料
+func funcC() {
+
+	elements := []int{}
+	for {
+		select {
+		// 对B车的结果进行接收
+		case elements = <-ch:
+			break
+		default:
+			continue
+		}
+	}
+	for index, element := range elements {
+		wg.Add(1)
+		go func(index, element int) {
+			elements[index] = carry(element)
+		}(element, index)
+	}
+	wg.Wait()
+	global.Done()
+}
+
+func carry(element int) int {
+	fmt.Printf("carry ele %d\n", element)
+	return element
+}
+func producer(index int) {
+	infos <- index
+	fmt.Printf("Producer %d, sent %d\n", index, index)
+}
+func consumer(index int) {
+	fmt.Printf("Consumer %d , reveied  msg %d\n", index, <-infos)
+}
+
+func TestConsumerAndProducer() {
+	// 十个生产者
+	for i := 0; i < 10; i++ {
+		go producer(i)
+	}
+	// 十个消费者
+	for i := 0; i < 100; i++ {
+		go consumer(i)
+	}
+
+	time.Sleep(20 * time.Second)
+}
 func main() {
 	//
 	//nums := []int{0, 12, 1, 0, 4}
@@ -244,7 +399,10 @@ func main() {
 	//node2.Right = &node4
 	//
 	//tree.TestBinaryTreePaths(&node1)
-	dfs.TestLongestLenght(")(")
-	TestDuopleList()
-	TestContext()
+	//dfs.TestLongestLenght(")(")
+	//TestDuopleList()
+	//TestContext()
+	//GetEggs()
+	//TestConsumerAndProducer()
+	MainPipline()
 }
