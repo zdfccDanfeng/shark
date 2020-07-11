@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/list"
+	"context"
 	"fmt"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/shark/src/config"
@@ -11,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func largestPerimeter(A []int) int {
@@ -175,6 +177,33 @@ func TestDuopleList() {
 	doubleList.MoveToFront(back)
 }
 
+// 协程的生命周期：创建 、回收（系统、gc自动完成）、中断（主要通过context来实现）
+func TestContext() {
+	parent := context.Background() // 初始化context
+	// 生成一个取消的context
+	ctx, cancel := context.WithCancel(parent)
+	runTimes := 0
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Println("GoRoutine is done!!!")
+				return
+			default:
+				fmt.Printf("GoRoutine Running times : %d\n", runTimes)
+				runTimes += 1
+			}
+			if runTimes >= 5 {
+				cancel() // 关闭GoRoutine
+				wg.Done()
+			}
+		}
+	}(ctx)
+	wg.Wait()
+}
+
 func main() {
 	//
 	//nums := []int{0, 12, 1, 0, 4}
@@ -217,4 +246,5 @@ func main() {
 	//tree.TestBinaryTreePaths(&node1)
 	dfs.TestLongestLenght(")(")
 	TestDuopleList()
+	TestContext()
 }
