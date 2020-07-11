@@ -13,8 +13,10 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/golang/protobuf v1.4.2
 	github.com/jinzhu/gorm v1.9.14
+	github.com/nightlyone/lockfile v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/pbenner/threadpool v0.0.0-20191122191339-0302c226b91e
+	github.com/robaho/keydb v0.0.0-20200219155537-3a775e464c52
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344
 	google.golang.org/grpc v1.30.0
 	google.golang.org/protobuf v1.25.0

@@ -8,6 +8,7 @@ import (
 	"github.com/shark/src/config"
 	"github.com/shark/src/dao"
 	"github.com/shark/src/util"
+	"github.com/shark/src/util/lsm"
 	"sort"
 	"strconv"
 	"strings"
@@ -404,5 +405,6 @@ func main() {
 	//TestContext()
 	//GetEggs()
 	//TestConsumerAndProducer()
-	MainPipline()
+	//MainPipline()
+	lsm.TestKeyDb()
 }

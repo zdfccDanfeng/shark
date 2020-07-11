@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	pb "github.com/scaffold/src/rpc/proto"
+	pb "github.com/shark/src/rpc/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"
