@@ -363,8 +363,13 @@ func TestConsumerAndProducer() {
 
 // ["NumArray","update","sumRange","sumRange","update","sumRange"]
 //[[[9,-8]],[0,3],[1,1],[0,1],[1,-3],[0,1]]
+// ["NumArray","sumRange","sumRange","sumRange","update","update","update","sumRange","update","sumRange","update"]
+//[[[0,9,5,7,3]],[4,4],[2,4],[3,3],[4,5],[1,7],[0,8],[1,2],[1,9],[4,4],[3,4]]
+// ["NumArray","sumRange","update","sumRange","sumRange","update","update","sumRange","sumRange","update","update"]
+//[[[-28,-39,53,65,11,-56,-65,-39,-43,97]],[5,6],[9,27],[2,3],[6,7],[1,-82],[3,-72],[3,7],[1,8],[5,13],[4,-67]]
 func TestSegment() {
-	numArray := tree.Constructor([]int{9, -8})
+	numArray := tree.Constructor([]int{-28, -39, 53, 65, 11, -56, -65, -39, -43, 97})
+	fmt.Println("nn :", numArray.SumRange(5, 6))
 	numArray.Update(0, 3)
 	sumRange := numArray.SumRange(1, 1)
 	sumRange1 := numArray.SumRange(0, 1)

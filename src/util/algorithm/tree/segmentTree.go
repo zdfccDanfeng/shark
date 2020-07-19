@@ -35,7 +35,7 @@ func NewSegmentTree(nums []int) SegmentTree {
 	if nums == nil || len(nums) == 0 {
 		return segmentTree
 	}
-	segmentTree.nodes = make([]Node, 2*len(nums)+1) // 初始化nodes节点
+	segmentTree.nodes = make([]Node, 4*len(nums)+1) // 初始化nodes节点
 	segmentTree.buildSegmentTree(0)
 	//fmt.Println("xxxx")
 	return segmentTree
@@ -70,7 +70,7 @@ func (this *SegmentTree) buildSegmentTree(index int) {
 // 查询指定区间的和
 func (this *SegmentTree) query(index, left, right int) int {
 	node := this.nodes[index]
-	if node.left == node.left && node.right == right {
+	if node.left == left && node.right == right {
 		// 当前区间和带查询区间完全匹配
 		return this.nodes[index].data
 	}
@@ -82,7 +82,7 @@ func (this *SegmentTree) query(index, left, right int) int {
 	if left > mid {
 		return this.query(index<<1+2, left, right)
 	}
-	return this.query(index<<1+1, left, right) + this.query(index<<1+2, left, right)
+	return this.query(index<<1+1, left, mid) + this.query(index<<1+2, mid+1, right)
 }
 
 // index 根节点index
@@ -135,6 +135,9 @@ func (this *NumArray) Update(i int, val int) {
 func (this *NumArray) SumRange(i int, j int) int {
 	if len(this.nums) == 0 {
 		return 0
+	}
+	if i == j {
+		return this.nums[i]
 	}
 
 	return this.segmentTree.query(0, i, j)
