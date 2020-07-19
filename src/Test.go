@@ -8,7 +8,7 @@ import (
 	"github.com/shark/src/config"
 	"github.com/shark/src/dao"
 	"github.com/shark/src/util"
-	"github.com/shark/src/util/lsm"
+	"github.com/shark/src/util/algorithm/tree"
 	"sort"
 	"strconv"
 	"strings"
@@ -360,6 +360,22 @@ func TestConsumerAndProducer() {
 
 	time.Sleep(20 * time.Second)
 }
+
+// ["NumArray","update","sumRange","sumRange","update","sumRange"]
+//[[[9,-8]],[0,3],[1,1],[0,1],[1,-3],[0,1]]
+func TestSegment() {
+	numArray := tree.Constructor([]int{9, -8})
+	numArray.Update(0, 3)
+	sumRange := numArray.SumRange(1, 1)
+	sumRange1 := numArray.SumRange(0, 1)
+	numArray.Update(1, -3)
+
+	su := numArray.SumRange(0, 1)
+	fmt.Println("sumRange :", sumRange)
+	fmt.Println("sumRange1 :", sumRange1)
+	fmt.Println("su :", su)
+
+}
 func main() {
 	//
 	//nums := []int{0, 12, 1, 0, 4}
@@ -406,5 +422,6 @@ func main() {
 	//GetEggs()
 	//TestConsumerAndProducer()
 	//MainPipline()
-	lsm.TestKeyDb()
+	//lsm.TestKeyDb()
+	TestSegment()
 }
