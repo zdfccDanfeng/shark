@@ -9,6 +9,7 @@ import (
 	"github.com/shark/src/dao"
 	"github.com/shark/src/util"
 	"github.com/shark/src/util/algorithm/tree"
+	"github.com/shark/src/util/reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -381,6 +382,7 @@ func TestSegment() {
 	fmt.Println("su :", su)
 
 }
+
 func main() {
 	//
 	//nums := []int{0, 12, 1, 0, 4}
@@ -429,4 +431,5 @@ func main() {
 	//MainPipline()
 	//lsm.TestKeyDb()
 	TestSegment()
+	reflect.TestParse()
 }
