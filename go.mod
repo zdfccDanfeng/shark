@@ -17,6 +17,8 @@ require (
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/pbenner/threadpool v0.0.0-20191122191339-0302c226b91e
 	github.com/robaho/keydb v0.0.0-20200219155537-3a775e464c52
+	go.uber.org/atomic v1.6.0 // indirect
+	go.uber.org/ratelimit v0.1.0
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344
 	google.golang.org/grpc v1.30.0
 	google.golang.org/protobuf v1.25.0

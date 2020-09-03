@@ -9,7 +9,10 @@ import (
 	"github.com/shark/src/dao"
 	"github.com/shark/src/util"
 	"github.com/shark/src/util/algorithm/tree"
-	"github.com/shark/src/util/reflect"
+	"github.com/shark/src/util/mock"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -362,6 +365,164 @@ func TestConsumerAndProducer() {
 	time.Sleep(20 * time.Second)
 }
 
+type Animial interface {
+	walk()
+}
+
+type Person interface {
+	addDock()
+	Animial
+}
+
+// // Context 提供跨越API的截止时间获取，取消信号，以及请求范围值的功能。
+//// 它的这些方案在多个 goroutine 中使用是安全的
+//type Context interface {
+//    // 如果设置了截止时间，这个方法ok会是true，并返回设置的截止时间
+// Deadline() (deadline time.Time, ok bool)
+//    // 如果 Context 超时或者主动取消返回一个关闭的channel，如果返回的是nil，表示这个
+//    // context 永远不会关闭，比如：Background()
+// Done() <-chan struct{}
+//    // 返回发生的错误
+// Err() error
+//    // 它的作用就是传值
+// Value(key interface{}) interface{}
+//}
+func TestContext2() {
+	req, _ := http.NewRequest("GET", "https://api.github.com/users/helei112g", nil)
+	// 这里设置了超时时间
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*1)
+	defer cancel()
+	req = req.WithContext(ctx)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalln("request Err", err.Error())
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
+	// 上面这段程序就是请求 github 获取用户信息的接口，通过 context 包设置了请求超时时间是 1ms （肯定无法访问到）
+	// 执行时我们看到控制台做如下输出：
+	//2020/xx/xx xx:xx:xx request Err Get https://api.github.com/users/helei112g: context deadline exceeded
+	//exit status 1
+}
+
+// 模拟获取订单服务。大概意思是说，有一个获取订单详情的请求，会单独起一个 goroutine 去处理该请求。在该请求内部又有三个分支 goroutine 分别处理订单详情、推荐商品、物流信息；每个分支可能又需要单独调用DB、Redis等存储组件。那么面对这个场景我们需要哪些额外的事情呢？
+//
+//三个分支 goroutine 可能是对应的三个不同服务，我们想要携带一些基础信息过去，比如：LogID、UserID、IP等；
+//每个分支我们需要设置过期时间，如果某个超时不影响整个流程；
+//如果主 goroutine 发生错误，取消了请求，对应的三个分支应该也都取消，避免资源浪费；
+//简单归纳就是传值、同步信号（取消、超时）。
+//由于服务内部不方便模拟，我们简化成函数调用，假设图中所有的逻辑都可以并发调用。现在我们的要求是：
+//
+//整个函数的超时时间为1s；
+//需要从最外层传递 LogID/UserID/IP 信息到其它函数；
+//获取订单接口超时为 500ms，由于 DB/Redis 是其内部支持的，这里不进行模拟；
+//获取推荐超时是 400ms；
+//获取物流超时是 700ms。
+//为了清晰，我这里所有接口都返回一个字符串，实际中会根据需要返回不同的结果；请求参数也都只使用了 context。代码如下：
+type key int
+
+const (
+	userIP = iota
+	userID
+	logID
+)
+
+// timeout: 1s
+type Result struct {
+	order     string
+	logistics string
+	recommend string
+}
+
+func TestGetOrderInfo() (result *Result, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
+	defer cancel() // 设置
+	// 从最外层传递 LogID/UserID/IP 信息到其它函数；
+	ctx = context.WithValue(ctx, userIP, "127.0.0.1") // 子流程分别持有父Context引用！！！！
+	ctx = context.WithValue(ctx, userID, 666888)
+	ctx = context.WithValue(ctx, logID, "123456")
+	result = &Result{} // 业务逻辑处理放到协程
+	go func() { result.order, err = getOrderDetail(ctx) }()
+	go func() { result.logistics, err = getLogisticsDetail(ctx) }()
+	go func() { result.recommend, err = getRecommend(ctx) }()
+	for {
+		select {
+		case <-ctx.Done():
+			return result, ctx.Err() // 取消或者超时，把现有已经拿到的结果返回
+		default:
+		}
+		//有错误直接返回
+		if err != nil {
+			return result, err
+		}
+		// 全部处理完成，直接返回
+		if result.order != "" && result.logistics != "" && result.recommend != "" {
+			return result, nil
+		}
+	}
+}
+
+// 获取订单接口超时为 500ms
+func getOrderDetail(ctx context.Context) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*500)
+	defer cancel()
+	// 模拟超时
+	time.Sleep(time.Millisecond * 700)
+	// 获取 user id
+	uip := ctx.Value(userIP).(string)
+	fmt.Println("userIP", uip)
+	return handleTimeout(ctx, func() string {
+		return "order"
+	})
+}
+
+// 获取物流超时是 700ms。
+func getLogisticsDetail(ctx context.Context) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*700)
+	defer cancel()
+	// 获取 user id
+	uid := ctx.Value(userID).(int)
+	fmt.Println("userID", uid)
+	return handleTimeout(ctx, func() string {
+		return "logistics"
+	})
+}
+
+// 获取推荐超时是 400ms；
+func getRecommend(ctx context.Context) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*400)
+	defer cancel() // 获取 log id
+	lid := ctx.Value(logID).(string)
+	fmt.Println("logID", lid)
+	return handleTimeout(ctx, func() string {
+		return "recommend"
+	})
+}
+
+// 超时的统一处理代码
+func handleTimeout(ctx context.Context, f func() string) (string, error) {
+	// 请求之前先去检查下是否超时
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	default:
+	}
+	str := make(chan string)
+	go func() {
+		// 业务逻辑
+		str <- f()
+	}()
+	// 类似异步回调
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	// str 这个channel接收到了回调信号会返回
+	case ret := <-str:
+		return ret, nil
+	}
+}
+
 // ["NumArray","update","sumRange","sumRange","update","sumRange"]
 //[[[9,-8]],[0,3],[1,1],[0,1],[1,-3],[0,1]]
 // ["NumArray","sumRange","sumRange","sumRange","update","update","update","sumRange","update","sumRange","update"]
@@ -381,6 +542,18 @@ func TestSegment() {
 	fmt.Println("sumRange1 :", sumRange1)
 	fmt.Println("su :", su)
 
+}
+
+func TestMock() {
+	mock := mock.NewMock()
+	c := mock.AfterFunc(time.Second*3, func() {
+		fmt.Println("hhhhhhh")
+	})
+	c.Tick()
+	fmt.Printf("cSize is %d\n", len(c.C))
+	//<-c.C
+
+	time.Sleep(time.Second * 10)
 }
 
 func main() {
@@ -430,6 +603,7 @@ func main() {
 	//TestConsumerAndProducer()
 	//MainPipline()
 	//lsm.TestKeyDb()
-	TestSegment()
-	reflect.TestParse()
+	//TestSegment()
+	//reflect.TestParse()
+	TestMock()
 }
