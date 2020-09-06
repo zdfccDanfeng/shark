@@ -18,6 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProductServiceClient interface {
 	QueryProdInfoDetail(ctx context.Context, in *ProdctInfo, opts ...grpc.CallOption) (*Response, error)
+	// 查询大量信息 使用流模式 分批发送
+	QueryBatchProdInfoDetail(ctx context.Context, in *ProdctInfo, opts ...grpc.CallOption) (ProductService_QueryBatchProdInfoDetailClient, error)
 }
 
 type productServiceClient struct {
@@ -41,12 +43,51 @@ func (c *productServiceClient) QueryProdInfoDetail(ctx context.Context, in *Prod
 	return out, nil
 }
 
+var productServiceQueryBatchProdInfoDetailStreamDesc = &grpc.StreamDesc{
+	StreamName:    "QueryBatchProdInfoDetail",
+	ServerStreams: true,
+}
+
+func (c *productServiceClient) QueryBatchProdInfoDetail(ctx context.Context, in *ProdctInfo, opts ...grpc.CallOption) (ProductService_QueryBatchProdInfoDetailClient, error) {
+	stream, err := c.cc.NewStream(ctx, productServiceQueryBatchProdInfoDetailStreamDesc, "/rpc.product.ProductService/QueryBatchProdInfoDetail", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &productServiceQueryBatchProdInfoDetailClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ProductService_QueryBatchProdInfoDetailClient interface {
+	Recv() (*Response, error)
+	grpc.ClientStream
+}
+
+type productServiceQueryBatchProdInfoDetailClient struct {
+	grpc.ClientStream
+}
+
+func (x *productServiceQueryBatchProdInfoDetailClient) Recv() (*Response, error) {
+	m := new(Response)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ProductServiceService is the service API for ProductService service.
 // Fields should be assigned to their respective handler implementations only before
 // RegisterProductServiceService is called.  Any unassigned fields will result in the
 // handler for that method returning an Unimplemented error.
 type ProductServiceService struct {
 	QueryProdInfoDetail func(context.Context, *ProdctInfo) (*Response, error)
+	// 查询大量信息 使用流模式 分批发送
+	QueryBatchProdInfoDetail func(*ProdctInfo, ProductService_QueryBatchProdInfoDetailServer) error
 }
 
 func (s *ProductServiceService) queryProdInfoDetail(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -66,6 +107,26 @@ func (s *ProductServiceService) queryProdInfoDetail(_ interface{}, ctx context.C
 	}
 	return interceptor(ctx, in, info, handler)
 }
+func (s *ProductServiceService) queryBatchProdInfoDetail(_ interface{}, stream grpc.ServerStream) error {
+	m := new(ProdctInfo)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return s.QueryBatchProdInfoDetail(m, &productServiceQueryBatchProdInfoDetailServer{stream})
+}
+
+type ProductService_QueryBatchProdInfoDetailServer interface {
+	Send(*Response) error
+	grpc.ServerStream
+}
+
+type productServiceQueryBatchProdInfoDetailServer struct {
+	grpc.ServerStream
+}
+
+func (x *productServiceQueryBatchProdInfoDetailServer) Send(m *Response) error {
+	return x.ServerStream.SendMsg(m)
+}
 
 // RegisterProductServiceService registers a service implementation with a gRPC server.
 func RegisterProductServiceService(s grpc.ServiceRegistrar, srv *ProductServiceService) {
@@ -73,6 +134,11 @@ func RegisterProductServiceService(s grpc.ServiceRegistrar, srv *ProductServiceS
 	if srvCopy.QueryProdInfoDetail == nil {
 		srvCopy.QueryProdInfoDetail = func(context.Context, *ProdctInfo) (*Response, error) {
 			return nil, status.Errorf(codes.Unimplemented, "method QueryProdInfoDetail not implemented")
+		}
+	}
+	if srvCopy.QueryBatchProdInfoDetail == nil {
+		srvCopy.QueryBatchProdInfoDetail = func(*ProdctInfo, ProductService_QueryBatchProdInfoDetailServer) error {
+			return status.Errorf(codes.Unimplemented, "method QueryBatchProdInfoDetail not implemented")
 		}
 	}
 	sd := grpc.ServiceDesc{
@@ -83,7 +149,13 @@ func RegisterProductServiceService(s grpc.ServiceRegistrar, srv *ProductServiceS
 				Handler:    srvCopy.queryProdInfoDetail,
 			},
 		},
-		Streams:  []grpc.StreamDesc{},
+		Streams: []grpc.StreamDesc{
+			{
+				StreamName:    "QueryBatchProdInfoDetail",
+				Handler:       srvCopy.queryBatchProdInfoDetail,
+				ServerStreams: true,
+			},
+		},
 		Metadata: "Products.proto",
 	}
 
@@ -103,6 +175,11 @@ func NewProductServiceService(s interface{}) *ProductServiceService {
 	}); ok {
 		ns.QueryProdInfoDetail = h.QueryProdInfoDetail
 	}
+	if h, ok := s.(interface {
+		QueryBatchProdInfoDetail(*ProdctInfo, ProductService_QueryBatchProdInfoDetailServer) error
+	}); ok {
+		ns.QueryBatchProdInfoDetail = h.QueryBatchProdInfoDetail
+	}
 	return ns
 }
 
@@ -112,4 +189,6 @@ func NewProductServiceService(s interface{}) *ProductServiceService {
 // use of this type is not recommended.
 type UnstableProductServiceService interface {
 	QueryProdInfoDetail(context.Context, *ProdctInfo) (*Response, error)
+	// 查询大量信息 使用流模式 分批发送
+	QueryBatchProdInfoDetail(*ProdctInfo, ProductService_QueryBatchProdInfoDetailServer) error
 }

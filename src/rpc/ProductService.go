@@ -9,6 +9,7 @@ import (
 // productService实现类
 
 type ProductRrcSerciceImpl struct {
+	ProductSercice.ProductServiceService
 }
 
 // 服务端实现，实现rpc接口

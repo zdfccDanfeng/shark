@@ -14,4 +14,6 @@ message Response {
 }
 service  ProductService {
   rpc QueryProdInfoDetail(ProdctInfo) returns (Response) ;
+  // 查询大量信息 使用流模式 分批发送
+  rpc QueryBatchProdInfoDetail(ProdctInfo) returns ( stream Response) ;
 }

@@ -639,6 +639,6 @@ func main() {
 	//var a int32
 	//atomic.AddInt32(&a, 1)
 	//fmt.Println("a is : ", a)
-	//rpc.NewProductServer()
-	rpc.NewProductClient()
+	rpc.NewProductServer()
+	//rpc.NewProductClient()
 }
