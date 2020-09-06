@@ -1,0 +1,17 @@
+syntax = "proto3";
+package rpc.product;
+
+option go_package = "ProductSercice";
+
+message ProdctInfo {
+  int32 Id = 1;
+  string  Name = 2;
+  string  desc = 3;
+}
+message Response {
+  int32  ok = 1;
+  string  desc = 2;
+}
+service  ProductService {
+  rpc QueryProdInfoDetail(ProdctInfo) returns (Response) ;
+}

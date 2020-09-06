@@ -11,6 +11,7 @@ require (
 	github.com/eapache/queue v1.1.0
 	github.com/emirpasic/gods v1.12.0
 	github.com/gin-gonic/gin v1.6.3
+	github.com/goinggo/workpooltest v0.0.0-20140716192839-5d161f4a1b83
 	github.com/golang/protobuf v1.4.2
 	github.com/jinzhu/gorm v1.9.14
 	github.com/nightlyone/lockfile v1.0.0 // indirect
@@ -20,6 +21,9 @@ require (
 	go.uber.org/atomic v1.6.0 // indirect
 	go.uber.org/ratelimit v0.1.0
 	golang.org/x/net v0.0.0-20200625001655-4c5254603344
-	google.golang.org/grpc v1.30.0
+	google.golang.org/grpc v1.33.0-dev
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v0.0.0-20200902210233-8630cac324bf // indirect
 	google.golang.org/protobuf v1.25.0
+	labix.org/v2/mgo v0.0.0-20140701140051-000000000287
+	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )

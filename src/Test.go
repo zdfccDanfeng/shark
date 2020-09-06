@@ -7,9 +7,11 @@ import (
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/shark/src/config"
 	"github.com/shark/src/dao"
+	"github.com/shark/src/rpc"
 	"github.com/shark/src/util"
 	"github.com/shark/src/util/algorithm/tree"
 	"github.com/shark/src/util/mock"
+	"github.com/shark/src/util/speed"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -556,6 +558,33 @@ func TestMock() {
 	time.Sleep(time.Second * 10)
 }
 
+// Go之函数直接实现接口
+//1.定义一个接口
+type Run interface {
+	Runing()
+}
+
+//2.定义一个函数类型
+type Runer func()
+
+//3.让函数直接实现接口
+func (self Runer) Runing() {
+	self()
+}
+
+//调用
+var run Runer = Runer(func() {
+	fmt.Println("i am runing")
+})
+
+// run.Runing()
+
+func TestSpeed() {
+	sp := speed.New(time.Second * 1)
+	sp.Wait()
+	time.Sleep(time.Second * 10)
+}
+
 func main() {
 	//
 	//nums := []int{0, 12, 1, 0, 4}
@@ -605,5 +634,11 @@ func main() {
 	//lsm.TestKeyDb()
 	//TestSegment()
 	//reflect.TestParse()
-	TestMock()
+	//TestMock()
+	//TestSpeed()
+	//var a int32
+	//atomic.AddInt32(&a, 1)
+	//fmt.Println("a is : ", a)
+	//rpc.NewProductServer()
+	rpc.NewProductClient()
 }
