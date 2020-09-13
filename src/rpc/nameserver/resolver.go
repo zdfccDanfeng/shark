@@ -5,6 +5,13 @@ import (
 	"fmt"
 	"google.golang.org/grpc/resolver"
 	"strings"
+	"time"
+)
+
+// 整个自定义命名解析功能最核心的代码，通过自定义 MyCustomResolver 将服务名解析成对应实例
+const (
+	// syncNSInterval 定义了从 NS 服务同步实例列表的周期
+	syncNSInterval = 1 * time.Second
 )
 
 type MyCustomResolver struct {
@@ -14,8 +21,26 @@ type MyCustomResolver struct {
 	cancel context.CancelFunc
 }
 
+// ResolveNow 实现了 resolver.Resolver.ResolveNow 方法
 func (this *MyCustomResolver) ResolveNow(o resolver.ResolveNowOptions) {
+	this.watcher()
+}
 
+// watcher 轮询并更新指定 CalleeService 服务的实例变化
+func (r *MyCustomResolver) watcher() {
+	r.updateCC()
+	ticker := time.NewTicker(syncNSInterval)
+	for {
+		select {
+		// 当* nsResolver Close 时退出监听
+		case <-r.ctx.Done():
+			ticker.Stop()
+			return
+		case <-ticker.C:
+			// 调用* nsResolver.updagteCC() 方法，更新实例地址
+			r.updateCC()
+		}
+	}
 }
 
 // instances 包含调用方服务名、被调方服务名、被调方实例列表等数据
@@ -23,6 +48,7 @@ type instances struct {
 	callerService string
 	calleeService string
 	calleeIns     []string
+	CalleeIns     resolver.Address
 }
 
 func getInstances(target resolver.Target) (s *instances, e error) {
@@ -36,7 +62,7 @@ func getInstances(target resolver.Target) (s *instances, e error) {
 	return &instances{
 		callerService: auths[0],
 		calleeService: target.Endpoint,
-		calleeIns:     ins,
+		calleeIns:     ins.Instances,
 	}, nil
 
 }
@@ -56,7 +82,7 @@ func (r *MyCustomResolver) updateCC() {
 	// resolver.Address 结构体表示 grpc server 端实例地址
 	var newAddrs []resolver.Address
 	for k := range instances.calleeIns {
-		//	newAddrs = append(newAddrs, instances.calleeIns)
+		newAddrs = append(newAddrs, instances.CalleeIns)
 		fmt.Println(k)
 	}
 	//...
@@ -71,6 +97,10 @@ func (this *MyCustomResolver) Close() {
 	this.cancel()
 }
 
-func GetInstances(auth string, endPoint string) ([]string, error) {
-	return []string{}, nil
+type DnsInfo struct {
+	Instances []string // 解析到的被调地址列表信息
+}
+
+func GetInstances(auth string, endPoint string) (DnsInfo, error) {
+	return DnsInfo{}, nil
 }
