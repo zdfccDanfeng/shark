@@ -3,6 +3,7 @@ module github.com/shark
 go 1.14
 
 require (
+	git.corp.kuaishou.com/infra/infra-framework-go.git v0.0.0-20200909112110-74e4ad6cfd85 // indirect
 	github.com/BurntSushi/toml v0.3.1
 	github.com/Shopify/sarama v1.26.4
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
@@ -11,6 +12,7 @@ require (
 	github.com/eapache/queue v1.1.0
 	github.com/emirpasic/gods v1.12.0
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/goinggo/workpooltest v0.0.0-20140716192839-5d161f4a1b83
 	github.com/golang/protobuf v1.4.2
 	github.com/jinzhu/gorm v1.9.14

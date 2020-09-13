@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	address = "localhost:50001"
+	address = "localhost:50051"
 )
 
 func Client() {

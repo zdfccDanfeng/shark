@@ -585,6 +585,37 @@ func TestSpeed() {
 	time.Sleep(time.Second * 10)
 }
 
+func TestForLoop(ch <-chan struct{}) {
+	ctx, _ := context.WithCancel(context.Background())
+
+	for {
+		fmt.Println("sttt ===============")
+		select {
+		case <-ch:
+		case <-ctx.Done():
+			fmt.Println("done !!!!")
+			return
+		}
+		fmt.Println("xxxxxxxxxxx")
+		t := time.NewTimer(time.Second * 2)
+		select {
+		case <-t.C:
+		case <-ctx.Done():
+			fmt.Println("==== doen!!!")
+			t.Stop()
+			return
+		}
+	}
+}
+
+func TestStartGreetService() {
+	rpc.GreeterSerice()
+}
+
+func TestClientGreetService() {
+	rpc.GreeterSerClient()
+}
+
 func main() {
 	//
 	//nums := []int{0, 12, 1, 0, 4}
@@ -639,6 +670,28 @@ func main() {
 	//var a int32
 	//atomic.AddInt32(&a, 1)
 	//fmt.Println("a is : ", a)
-	rpc.NewProductServer()
+	//rpc.NewProductServer()
 	//rpc.NewProductClient()
+	// ctx, _ := context.WithCancel(context.Background())
+	//ch := make(chan struct{},1) // 缓冲区大小为1
+	//go TestForLoop(ch)
+	//ch <- struct{}{}
+	//doNow(ch)
+	//doNow(ch)
+	//time.Sleep(time.Second * 4)
+	//cancel()
+	//doNow(ch)
+
+	//TestStartGreetService()
+
+	TestClientGreetService()
+
+}
+
+func doNow(ch chan struct{}) {
+	select {
+	case ch <- struct{}{}:
+	default:
+
+	}
 }

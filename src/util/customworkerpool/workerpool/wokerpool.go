@@ -150,9 +150,9 @@ func New(numberOfRoutines int, queueCapacity int32) *WorkPool {
 	}
 
 	// Add the total number of routines to the wait group
-	workPool.shutdownWaitGroup.Add(numberOfRoutines)
+	workPool.shutdownWaitGroup.Add(numberOfRoutines) // 实力化出固定数目的goroutine..
 
-	// Launch the work routines to process work
+	// Launch the work routines to process work 启动固定数量的goRoutine来完成任务，，，
 	for workRoutine := 0; workRoutine < numberOfRoutines; workRoutine++ {
 		go workPool.workRoutine(workRoutine)
 	}
@@ -198,7 +198,7 @@ func (workPool *WorkPool) PostWork(goRoutine string, work PoolWorker) (err error
 	defer close(poolWork.resultChannel)
 	// 将PoolWork加入到QueueChannel
 	workPool.queueChannel <- poolWork
-	err = <-poolWork.resultChannel
+	err = <-poolWork.resultChannel // 阻塞直到任务消息投递成功
 
 	return err
 }
@@ -279,7 +279,11 @@ func (workPool *WorkPool) queueRoutine() {
 			workPool.shutdownQueueChannel <- "Down"
 			return
 
-		// Post work to be processed.
+		// Post work to be processed. 顺序从QueueChannel里面拉取任务进行处理。。。
+		// Go 运行环境通过向空闲中的 Goroutine 对应的 WorkChannel 发送信号的方式给 Goroutine 分配工作。当 channel 接收到信号，
+		// Go 运行环境将会把 channel 缓冲区的第一个任务传给 Goroutine 来处理。这个 channel 的缓冲区就像是一个先入先出的队列
+		// 如果全部的 Goroutines 都处于忙碌状态，那所有的剩下的工作都要等待。只要一个 routine 完成它被分配的工作，
+		// 它就会返回并继续等待 WorkChannel 的通知。如果 channel 的缓冲区有工作，那 Go 运行环境将会唤醒这个 Goroutine。
 		case queueItem := <-workPool.queueChannel:
 			// If the queue is at capacity don't add it.
 			if atomic.AddInt32(&workPool.queuedWork, 0) == workPool.queueCapacity {
