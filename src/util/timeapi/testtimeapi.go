@@ -36,3 +36,6 @@ func Love2() {
 	//停止ticker
 	ticker.Stop()
 }
+
+// Golang <-time.After（）在计时器过期前不会被垃圾回收
+// https://studygolang.com/articles/22617#reply0

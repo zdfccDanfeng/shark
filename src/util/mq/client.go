@@ -1,0 +1,42 @@
+package mq
+
+// 包装Broker,隐藏实现
+type Client struct {
+	bro *BrokerImpl
+}
+
+func NewClient() *Client {
+	return &Client{
+		bro: NewBroker(),
+	}
+}
+
+func (c *Client) SetConditions(capacity int) {
+	c.bro.setConditions(capacity)
+}
+
+func (c *Client) Publish(topic string, msg interface{}) error {
+	return c.bro.publish(topic, msg)
+}
+
+func (c *Client) Subscribe(topic string) (<-chan interface{}, error) {
+	return c.bro.subscribe(topic)
+}
+
+func (c *Client) Unsubscribe(topic string, sub <-chan interface{}) error {
+	return c.bro.unsubscribe(topic, sub)
+}
+
+func (c *Client) Close() {
+	c.bro.close()
+}
+
+// 封装一个方法来获取我们订阅的消息：
+func (c *Client) GetPayLoad(sub <-chan interface{}) interface{} {
+	for val := range sub {
+		if val != nil {
+			return val
+		}
+	}
+	return nil
+}
