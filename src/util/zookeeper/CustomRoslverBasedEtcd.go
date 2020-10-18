@@ -41,11 +41,28 @@ type etcdResolver struct {
 
 // NewResolver initialize an etcd client
 func NewResolver(etcdAddr string) resolver.Builder {
-
+	return &etcdResolver{rawAddr: etcdAddr}
 }
 
 func (r *etcdResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 
+	var err error
+
+	if cli == nil {
+		cli, err = clientv3.New(clientv3.Config{
+			Endpoints:   strings.Split(r.rawAddr, ";"),
+			DialTimeout: 15 * time.Second,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	r.cc = cc
+
+	go r.watch("/" + target.Scheme + "/" + target.Endpoint + "/")
+
+	return r, nil
 }
 
 func (r etcdResolver) Scheme() string {
