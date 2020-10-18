@@ -9,6 +9,7 @@ import (
 	"github.com/shark/src/dao"
 	"github.com/shark/src/rpc"
 	"github.com/shark/src/util"
+	"github.com/shark/src/util/algorithm/dp"
 	"github.com/shark/src/util/algorithm/tree"
 	"github.com/shark/src/util/mock"
 	"github.com/shark/src/util/speed"
@@ -684,7 +685,9 @@ func main() {
 
 	//TestStartGreetService()
 
-	TestClientGreetService()
+	// TestClientGreetService()
+	res := dp.SplitArray([]int{7, 2, 5, 10, 8}, 2)
+	fmt.Println("res is ", res)
 
 }
 

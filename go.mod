@@ -8,6 +8,7 @@ require (
 	github.com/Shopify/sarama v1.26.4
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/cch123/elasticsql v1.0.1
+	github.com/coreos/etcd v3.3.13+incompatible
 	github.com/deckarep/golang-set v1.7.1
 	github.com/eapache/queue v1.1.0
 	github.com/emirpasic/gods v1.12.0
@@ -20,11 +21,13 @@ require (
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/pbenner/threadpool v0.0.0-20191122191339-0302c226b91e
 	github.com/robaho/keydb v0.0.0-20200219155537-3a775e464c52
+	github.com/samuel/go-zookeeper v0.0.0-20200724154423-2164a8ac840e
 	go.uber.org/atomic v1.6.0 // indirect
 	go.uber.org/ratelimit v0.1.0
-	golang.org/x/net v0.0.0-20200625001655-4c5254603344
+	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	google.golang.org/grpc v1.33.0-dev
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v0.0.0-20200902210233-8630cac324bf // indirect
+	google.golang.org/grpc/examples v0.0.0-20201015222124-ea47aa91b3da // indirect
 	google.golang.org/protobuf v1.25.0
 	labix.org/v2/mgo v0.0.0-20140701140051-000000000287
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
